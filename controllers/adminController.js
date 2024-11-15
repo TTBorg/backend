@@ -1,6 +1,9 @@
 const Admin = require('../models/adminModel');  
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const tokenBlacklist = new Set();
+const { blacklistToken } = require('../middleware/authMiddleware');
+
 
 // Admin Signup
 exports.registerAdmin = async (req, res) => {
@@ -78,3 +81,14 @@ exports.loginAdmin = async (req, res) => {
     res.status(500).json({ error: 'Login failed' });
   }
 };
+
+
+exports.logoutAdmin = (req, res) => {
+    const token = req.header('Authorization')?.split(' ')[1];
+    if (!token) {
+      return res.status(400).json({ message: 'Token is required for logout' });
+    }
+    blacklistToken(token);
+    res.status(200).json({ message: 'Logout successful' });
+  };
+  
