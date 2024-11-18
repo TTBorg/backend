@@ -110,10 +110,18 @@ exports.loginAdmin = async (req, res) => {
     res.status(200).json({
       message: 'Login successful',
       token, // The JWT token to be used in subsequent requests
-      admin: {
+      user: {
         id: admin._id,
-        name: admin.name,
+        first_name: admin.first_name,
+        last_name: admin.last_name,
+        company_name: admin.company_name,
         email: admin.email,
+        alt_email: admin.alt_email,
+        phone: admin.phone,
+        address: admin.address,
+        country: admin.ecountrymail,
+        state: admin.state,
+        team_size: admin.team_size,
         role: admin.role,
         // Add any other fields from the admin document you'd like to include
       },
