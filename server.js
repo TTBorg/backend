@@ -1,4 +1,6 @@
 require('dotenv').config();
+const adminRoutes = require('./routes/adminRoutes'); 
+const pmRoutes = require('./routes/pmRoutes'); 
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -31,6 +33,8 @@ connectDB();
 
 // Use the admin routes
 app.use('/api/admin', adminRoutes);
+app.use('/api/pm', pmRoutes);
+
 
 // Basic Test Route
 app.get('/', (req, res) => {
@@ -40,3 +44,4 @@ app.get('/', (req, res) => {
 // Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
