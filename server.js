@@ -5,7 +5,6 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const adminRoutes = require('./routes/adminRoutes'); // Import the admin routes
 
 const app = express();
 console.log(process.env.MONGO_URI);  // This should print the MongoDB URI to the console
