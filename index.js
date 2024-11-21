@@ -5,13 +5,20 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const adminRoutes = require('./routes/adminRoutes'); // Import the admin routes
 const pmRoutes = require('./routes/pmRoutes'); 
+const cors = require('cors');
 
 dotenv.config();
 
 const app = express();
 
 // Middleware
-app.use(cors());
+// app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:3000', // Replace with the frontend URL
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
+    credentials: true, // Allow cookies to be sent
+  }));
+  
 app.use(bodyParser.json()); // For parsing application/json
 
 // Connect to MongoDB
