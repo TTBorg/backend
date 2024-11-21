@@ -6,6 +6,26 @@ const pmRoutes = require('./routes/pmRoutes');
 const cors = require('cors');
 
 const app = express();
+app.use(cors({
+  origin: '*', // Allow any origin
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true, // Optional, depends on your cookie/session setup
+}));
+
+// const allowedOrigins = ['https://your-production-site.com'];
+// app.use(cors({
+//   origin: (origin, callback) => {
+//     if (allowedOrigins.includes(origin)) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error('Not allowed by CORS'));
+//     }
+//   },
+//   methods: ['GET', 'POST', 'PUT', 'DELETE'],
+//   credentials: true,
+// }));
+
+
 app.use(express.json());  
 
 // Connect to MongoDB

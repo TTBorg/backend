@@ -10,13 +10,25 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
-// app.use(cors());
 app.use(cors({
-    origin: 'http://localhost:3000',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
-    credentials: true, // Allow cookies to be sent
-  }));
+    origin: '*', // Allow any origin
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true, // Optional, depends on your cookie/session setup
+}));
+
+// const allowedOrigins = ['https://your-production-site.com'];
+// app.use(cors({
+//   origin: (origin, callback) => {
+//     if (allowedOrigins.includes(origin)) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error('Not allowed by CORS'));
+//     }
+//   },
+//   methods: ['GET', 'POST', 'PUT', 'DELETE'],
+//   credentials: true,
+// }));
+
 
 app.use(bodyParser.json()); // For parsing application/json
 
