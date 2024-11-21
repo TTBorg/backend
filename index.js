@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const adminRoutes = require('./routes/adminRoutes'); // Import the admin routes
+const pmRoutes = require('./routes/pmRoutes'); 
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopol
 
 // Use the admin routes
 app.use('/admin', adminRoutes);
+app.use('/api/pm', pmRoutes);
 
 // Basic Test Route (You can test this by visiting http://localhost:3000/)
 app.get('/', (req, res) => {
