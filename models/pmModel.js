@@ -8,6 +8,7 @@ const pmSchema = new mongoose.Schema({
   role: { type: String, default: 'Project Manager' },
   assigned_projects: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Project' }],
   status: { type: String, enum: ['active', 'suspended'], default: 'active' },
+  admin_id: { type: String },
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },
 });
