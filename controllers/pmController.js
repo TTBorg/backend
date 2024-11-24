@@ -87,3 +87,23 @@ exports.loginPM = async (req, res) => {
     res.status(500).json({ error: 'Login failed' });
   }
 };
+
+exports.getAllProjectManagers = async (req, res) => {
+  try {
+    // Retrieve all project managers
+    const projectManagers = await ProjectManager.find();
+
+    if (projectManagers.length === 0) {
+      return res.status(404).json({ message: 'No project managers found' });
+    }
+
+    // Return the list of project managers
+    res.status(200).json({
+      message: 'Project managers retrieved successfully',
+      projectManagers,
+    });
+  } catch (error) {
+    console.error('Error retrieving project managers:', error);
+    res.status(500).json({ error: 'Failed to retrieve project managers' });
+  }
+};

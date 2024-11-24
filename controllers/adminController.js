@@ -421,6 +421,27 @@ exports.invitePM = async (req, res) => {
 };
 
 
+exports.getAllAdmins = async (req, res) => {
+  try {
+    // Retrieve all admins from the database
+    const admins = await Admin.find();
+
+    if (admins.length === 0) {
+      return res.status(404).json({ message: 'No admins found' });
+    }
+
+    // Return the list of admins
+    res.status(200).json({
+      message: 'Admins retrieved successfully',
+      admins, // This will send the list of all admins
+    });
+  } catch (error) {
+    console.error('Error retrieving admins:', error);
+    res.status(500).json({ error: 'Failed to retrieve admins' });
+  }
+};
+
+
 
 exports.logoutAdmin = (req, res) => {
     const token = req.header('Authorization')?.split(' ')[1];
