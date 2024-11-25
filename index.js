@@ -39,7 +39,7 @@ mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopol
     .catch(err => console.log('MongoDB connection error: ', err));
 
 // Use the admin routes
-app.use('/admin', adminRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/pm', pmRoutes);
 app.use('/api/projects', projectRoutes);
 
