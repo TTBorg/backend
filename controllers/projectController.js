@@ -134,4 +134,32 @@ exports.updateProject = async (req, res) => {
     }
   };
   
+  exports.getProjectsByAdminId = async (req, res) => {
+    const { admin_id } = req.params; // Assuming the admin ID is passed as a URL parameter
+  
+    try {
+      // Validate the admin_id as an ObjectId
+      if (!mongoose.isValidObjectId(admin_id)) {
+        return res.status(400).json({ error: 'Invalid admin_id' });
+      }
+  
+      // Check if the admin exists
+      const admin = await Admin.findById(admin_id);
+      if (!admin) {
+        return res.status(404).json({ error: 'Admin not found' });
+      }
+  
+      // Fetch projects created by this admin
+      const projects = await Project.find({ created_by: admin_id });
+  
+      // Respond with the projects
+      res.status(200).json({
+        message: 'Projects fetched successfully',
+        projects,
+      });
+    } catch (error) {
+      console.error('Error fetching projects by admin_id:', error);
+      res.status(500).json({ error: 'Failed to fetch projects' });
+    }
+  };
   
