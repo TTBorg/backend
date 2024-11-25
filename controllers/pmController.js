@@ -179,7 +179,7 @@ exports.getProjectManagersByAdmin = async (req, res) => {
     }
 
     // Retrieve project managers associated with the admin ID
-    const projectManagers = await ProjectManager.find({ created_by: adminId }); // Assuming `created_by` links PMs to Admins
+    const projectManagers = await ProjectManager.find({ admin_id: adminId });
 
     if (projectManagers.length === 0) {
       return res.status(404).json({ message: 'No project managers found for this admin' });
