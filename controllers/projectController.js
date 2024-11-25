@@ -169,9 +169,9 @@ exports.updateProject = async (req, res) => {
   
     try {
       // Validate the project_id as an ObjectId
-      if (!mongoose.isValidObjectId(project_id)) {
-        return res.status(400).json({ error: 'Invalid project_id' });
-      }
+      // if (!mongoose.isValidObjectId(project_id)) {
+      //   return res.status(400).json({ error: 'Invalid project_id' });
+      // }
   
       // Fetch the project by its ID
       const project = await Project.findById(project_id);
