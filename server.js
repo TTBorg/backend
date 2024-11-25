@@ -3,6 +3,8 @@ const connectDB = require('./config/db');
 require('dotenv').config();
 const adminRoutes = require('./routes/adminRoutes'); 
 const pmRoutes = require('./routes/pmRoutes'); 
+const projectRoutes = require('./routes/projectRoutes'); 
+
 const cors = require('cors');
 
 const app = express();
@@ -34,6 +36,7 @@ connectDB();
 // Use the admin routes
 app.use('/api/admin', adminRoutes);
 app.use('/api/pm', pmRoutes);
+app.use('/api/projects', projectRoutes);
 
 
 app.get('/', (req, res) => {
