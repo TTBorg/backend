@@ -450,7 +450,7 @@ exports.invitePM = async (req, res) => {
     }
 
     // Step 5: Create the signup link with the admin_id
-    const signupLink = `http://localhost:3000/PmSignUp?admin_id=${admin_id}`;
+    const signupLink = `https://ttb-project.vercel.app/pm-profile-setup?admin_id=${admin_id}`;
 
     // Step 6: Send the invitation email
     try {
@@ -462,17 +462,19 @@ exports.invitePM = async (req, res) => {
       await sendEmail(email, 'Invitation to Join as Project Manager', emailContent);
     } catch (emailError) {
       console.error('Error sending invitation email:', emailError);
-      return res.status(500).json({ error: 'Failed to send invitation email', details: emailError.message });
+      return res.status(500).json({ error: 'Failed to send invitation email', signupLink, details: emailError.message });
     }
 
     // Success Response
     res.status(200).json({
       message: 'Invitation sent successfully',
-      signupLink, // Optional: Include the link in the response for debugging or logging
+      signupLink, 
     });
   } catch (error) {
     console.error('Unexpected error in invitePM:', error);
-    res.status(500).json({ error: 'An unexpected error occurred' });
+    res.status(500).json({ error: 'An unexpected error occurred',
+      signupLink,
+     });
   }
 };
 
