@@ -13,8 +13,8 @@ const nodemailer = require('nodemailer');
 exports.registerAdmin = async (req, res) => {
   try {
     const { 
-      first_name, 
-      last_name, 
+      fname, 
+      lname, 
       company_name, 
       email, 
       alt_email, 
@@ -27,7 +27,7 @@ exports.registerAdmin = async (req, res) => {
     } = req.body;
 
     // Simple validation for required fields
-    if (!email || !password || !first_name || !last_name || !company_name) {
+    if (!email || !password || !fname || !lname || !company_name) {
       return res.status(400).json({ error: 'Please provide all required fields' });
     }
 
@@ -40,8 +40,8 @@ exports.registerAdmin = async (req, res) => {
 
     // Create and save the new admin
     const newAdmin = new Admin({
-      first_name,
-      last_name,
+      fname,
+      lname,
       company_name,
       email,
       alt_email,
@@ -203,8 +203,8 @@ exports.loginAdmin = async (req, res) => {
     // Prepare user details for response
     const userDetails = {
       id: user._id,
-      first_name: user.first_name || user.fname, // Handle field differences
-      last_name: user.last_name || user.lname,
+      fname: user.fname || user.fname, // Handle field differences
+      lname: user.lname || user.lname,
       email: user.email,
       role: userRole,
       // Include role-specific fields
