@@ -182,7 +182,7 @@ exports.getProjectManagersByAdmin = async (req, res) => {
     const projectManagers = await ProjectManager.find({ admin_id: adminId });
 
     if (projectManagers.length === 0) {
-      return res.status(404).json({ message: 'No project managers found for this admin' });
+      return res.status(200).json({ message: 'No project managers found for this admin' });
     }
 
     // Return the list of project managers
