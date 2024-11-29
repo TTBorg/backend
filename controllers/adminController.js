@@ -202,9 +202,9 @@ exports.loginAdmin = async (req, res) => {
 
     // Prepare user details for response
     const userDetails = {
-      id: user._id,
-      fname: user.fname || user.fname, // Handle field differences
-      lname: user.lname || user.lname,
+      _id: user._id, // Keep it as _id
+      fname: user.fname,
+      lname: user.lname,
       email: user.email,
       role: userRole,
       // Include role-specific fields
@@ -221,6 +221,7 @@ exports.loginAdmin = async (req, res) => {
         projects: user.projects, // Example of PM-specific field
       }),
     };
+    
 
     // Return the token and user details to the client
     res.status(200).json({
