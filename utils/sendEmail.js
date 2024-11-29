@@ -1,64 +1,31 @@
-// const nodemailer = require('nodemailer');
-
-// const sendEmail = async (to, subject, htmlContent) => {
-//   try {
-//     const transporter = nodemailer.createTransport({
-//       service: 'gmail',
-//       auth: {
-//         user: process.env.EMAIL_USER,
-//         pass: process.env.EMAIL_PASS,
-//       },
-//     });
-
-//     const mailOptions = {
-//       from: process.env.EMAIL_USER,
-//       to,
-//       subject,
-//       html: htmlContent,
-//     };
-
-//     const result = await transporter.sendMail(mailOptions);
-//     console.log('Email sent successfully:', result);
-//     return result;
-//   } catch (error) {
-//     console.error('Error sending email:', error);
-//     throw new Error('Failed to send email. Check logs for details.');
-//   }
-// };
-
-// module.exports = sendEmail;
-
 const nodemailer = require('nodemailer');
+require('dotenv').config(); // Load environment variables from the .env file
 
-const sendEmail = async (to, subject, htmlContent) => {
+// Create a Nodemailer transporter for Gmail
+const transporter = nodemailer.createTransport({
+  service: 'gmail',  // This tells Nodemailer to use Gmail's SMTP service
+  auth: {
+    user: process.env.MAIL_USERNAME, // Your Gmail address
+    pass: process.env.MAIL_PASSWORD, // Your app-specific password
+  },
+});
+
+// Function to send email
+const sendEmail = async (to, subject, text, html) => {
+  const mailOptions = {
+    from: `"${process.env.MAIL_FROM_NAME}" <${process.env.MAIL_FROM_ADDRESS}>`, // Sender address
+    to, // Recipient's email
+    subject, // Subject line
+    text, // Plain text body
+    html, // HTML body (optional)
+  };
+
   try {
-    // Create transporter with the new SMTP configuration
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: true, 
-      secure: process.env.EMAIL_ENCRYPTION === 'ssl', // Use secure connection if encryption is SSL
-      auth: {
-        user: process.env.EMAIL_USERNAME,
-        pass: process.env.EMAIL_PASSWORD,
-      },
-      debug: true, // Enable debugging
-      logger: true,
-    });
-
-    const mailOptions = {
-      from: `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_ADDRESS}>`, // Format sender info
-      to,
-      subject,
-      html: htmlContent,
-    };
-
-    const result = await transporter.sendMail(mailOptions);
-    console.log('Email sent successfully:', result);
-    return result;
+    // Send the email
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Email sent: ' + info.response);
   } catch (error) {
     console.error('Error sending email:', error);
-    throw new Error('Failed to send email. Check logs for details.');
   }
 };
 
