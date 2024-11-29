@@ -7,7 +7,7 @@ const { invitePM } = require('../controllers/adminController');
 router.post('/signup', registerAdmin);
 router.post('/login', loginAdmin);
 router.post('/logout', authMiddleware, logoutAdmin); 
-router.post('/invite-pm', invitePM);
+router.post('/invite-pm',  authMiddleware, invitePM);
 router.get('/admins', getAllAdmins);
 
 
