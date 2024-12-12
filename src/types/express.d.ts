@@ -6,7 +6,7 @@ declare global {
         export interface Request {
             email: string
             password: string
-            user?: JwtPayload
+            user?: JwtPayload | string
         }
     }
 }

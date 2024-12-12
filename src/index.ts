@@ -3,9 +3,9 @@ import mongoose from 'mongoose';
 import * as dotenv from 'dotenv';
 import bodyParser from 'body-parser';
 import cors from 'cors';
-import adminRoutes from './src/routes/adminRoutes';
-import pmRoutes from './src/routes/pmRoutes';
-import projectRoutes from './src/routes/projectRoutes';
+import adminRoutes from './routes/adminRoutes';
+import pmRoutes from './routes/pmRoutes';
+import projectRoutes from './routes/projectRoutes';
 
 dotenv.config();
 
@@ -34,7 +34,6 @@ app.use(cors({
 app.use(bodyParser.json()); // For parsing application/json
 app.use(bodyParser.urlencoded({extended: true}));
 
-console.log('got here', process.env.MONGO_URI)
 
 // Connect to MongoDB
 if (process.env.MONGO_URI) {
@@ -43,6 +42,8 @@ if (process.env.MONGO_URI) {
         .then(() => console.log('MongoDB connected'))
         .catch(err => console.log('MongoDB connection error: ', err));
 }
+
+
 
 
 // Use the admin routes
