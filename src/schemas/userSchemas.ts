@@ -5,6 +5,11 @@ export const adminLoginSchema = z.object({
     password: z.string().min(8)
 });
 
+export const invitePm = z.object({
+    email: z.string(),
+    admin_id: z.string()
+});
+
 export const adminRegSchema = z.object({
     email: z.string(),
     password: z.string().min(8),

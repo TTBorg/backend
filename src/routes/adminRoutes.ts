@@ -3,7 +3,7 @@ import { registerAdmin, loginAdmin, logoutAdmin, getAllAdmins } from '../control
 import { authMiddleware } from '../middleware/authMiddleware';
 import { invitePM } from '../controllers/adminController';
 import { validateData } from '../middleware/validationMiddleware';
-import { adminLoginSchema, adminRegSchema } from '../schemas/userSchemas';
+import { adminLoginSchema, adminRegSchema, invitePm } from '../schemas/userSchemas';
 
 
 const router = Router();
@@ -11,7 +11,7 @@ router.post('/signup', validateData(adminRegSchema), registerAdmin as RequestHan
 router.post('/login', validateData(adminLoginSchema), loginAdmin as RequestHandler);
 router.post('/logout', logoutAdmin as RequestHandler);
 
-router.post('/invite-pm', authMiddleware, invitePM as RequestHandler);
+router.post('/invite-pm', [authMiddleware, validateData(invitePm)], invitePM as RequestHandler);
 router.get('/admins', authMiddleware, getAllAdmins as RequestHandler);
 
 

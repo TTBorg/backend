@@ -25,11 +25,6 @@ export const registerAdmin = async (req: Request, res: Response) => {
       password
     } = req.body;
 
-    // Simple validation for required fields
-    if (!email || !password || !fname || !lname || !company_name) {
-      return res.status(400).json({ error: 'Please provide all required fields' });
-    }
-
     // Check if email is already in use
     const existingAdmin = await Admin.findOne({ email });
     if (existingAdmin) return res.status(400).json({ error: 'Email is already in use' });
@@ -431,9 +426,7 @@ export const invitePM = async (req: Request, res: Response) => {
 
   try {
     // Step 1: Validate required fields
-    if (!email || !admin_id) {
-      return res.status(400).json({ error: 'Email and admin ID are required' });
-    }
+
 
     // Step 2: Validate the email format
     const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
