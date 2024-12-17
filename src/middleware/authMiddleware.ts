@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import jwt, { JsonWebTokenError, JwtPayload, Secret } from 'jsonwebtoken';
+import { Admin } from '../models/adminModel';
 
 // In-memory token blacklist
 const tokenBlacklist = new Set();
@@ -10,7 +11,7 @@ export interface CustomRequest extends Request {
 }
 
 // Middleware to check for a valid token and blacklist
-export const authMiddleware = (req: Request, res: Response, next: NextFunction): void => {
+export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   try {
     if (
       req.headers.authorization &&
@@ -25,9 +26,12 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
         throw res.status(403).json({ error: 'Token has been invalidated. Please log in again.' });
       }
       const secret: Secret = process.env.JWT_SECRET || '';
-      console.log(secret);
 
-      const decoded = jwt.verify(token, secret);
+      const decoded = <any>jwt.verify(token, secret);
+      const user = await Admin.findById(decoded.id);
+      if (!user?.verified_mail) {
+        throw res.status(StatusCodes.UNAUTHORIZED).json({ error: 'User is not verified' });
+      }
       (req as CustomRequest).token = decoded;
       next();
     }
@@ -36,7 +40,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
     }
   } catch (error: any) {
     console.log(error)
-    res.status(StatusCodes.UNAUTHORIZED).json({ error: error.message });
+    return res.status(StatusCodes.UNAUTHORIZED).json({ error: error.message });  
   }
 };
 

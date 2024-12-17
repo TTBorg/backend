@@ -60,6 +60,10 @@ const adminSchema = new Schema<IUser>({
   updated_at: {
     type: Date,
     default: Date.now
+  },
+  verified_mail: {
+    type: Boolean,
+    default: false
   }
 });
 
