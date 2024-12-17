@@ -1,12 +1,14 @@
 import { Admin } from '../models/adminModel';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { blacklistToken } from '../middleware/authMiddleware';
 import { ProjectManager } from '../models/pmModel';
 import sendEmail from '../utils/sendEmail';
 import mongoose from 'mongoose';
 import { Request, Response } from 'express';
 import { UserRole } from '../types/user';
+import Token from '../models/tokenModel';
 
 // Admin Signup
 export const registerAdmin = async (req: Request, res: Response) => {
@@ -50,6 +52,23 @@ export const registerAdmin = async (req: Request, res: Response) => {
 
     // Exclude the password from the returned details
     const { password: _, ...adminDetails } = newAdmin.toObject();
+
+    let token = new Token({
+      userId: adminDetails._id,
+      token: crypto.randomBytes(32).toString("hex")
+    }).save();
+
+    try {
+      const emailContent = `
+        <p>Congratulations, your signup was successful</p>
+        <p>Click <a href="${process.env.APP_URL}/verify-email?token=${(await token).token}">here</a> to verify your mail.</p>
+        <p>If you did not request this invitation, please ignore this email.</p>
+      `;
+      await sendEmail(email, 'Welcome to TTB', emailContent);
+    } catch (emailError: any) {
+      console.error('Error sending invitation email:', emailError);
+      return res.status(500).json({ error: 'Failed to send invitation email', token: (await token).token, details: emailError.message });
+    }
 
     // Return success response with user details
     res.status(201).json({
@@ -149,6 +168,37 @@ export const registerAdmin = async (req: Request, res: Response) => {
 //   }
 // };
 
+export const verifyEmail = async (req: Request, res: Response) => {
+  try {
+
+    const { token } = req.body;
+    console.log(token);
+
+    const tokenValid = await Token.findOne({ token }).exec();
+    if (!tokenValid) {
+      return res.status(400).json({ error: 'Token is invalid' });
+    }
+
+    const user = await Admin.findById(tokenValid.userId);
+    if (!user) {
+      return res.status(400).json({ error: 'User not found' });
+    }
+
+    user.verified_mail = true;
+    user.save();
+    await Token.deleteOne({ token });
+    res.status(200).json({
+      message: 'Verification successful',
+      token,
+      user: user,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Verification failed' });
+  }
+
+}
+
 
 export const loginAdmin = async (req: Request, res: Response) => {
   const { email, password }: { email: string, password: string } = req.body;
@@ -231,6 +281,9 @@ export const loginAdmin = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Login failed' });
   }
 };
+
+
+
 
 
 // // Invite a PM
@@ -446,7 +499,7 @@ export const invitePM = async (req: Request, res: Response) => {
     }
 
     // Step 5: Create the signup link with the admin_id
-    const signupLink = `https://ttb-project.vercel.app/pm-profile-setup?admin_id=${admin_id}`;
+    const signupLink = `${process.env.APP_URL}/pm-profile-setup?admin_id=${admin_id}`;
 
     // Step 6: Send the invitation email
     try {

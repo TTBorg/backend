@@ -23,3 +23,7 @@ export const adminRegSchema = z.object({
     state: z.string(),
     team_size: z.number(),
 });
+
+export const adminVerifySchema = z.object({
+    token: z.string()
+})

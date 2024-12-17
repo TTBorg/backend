@@ -17,6 +17,7 @@ export interface IUser {
     assigned_projects?: string[];
     status?: boolean;
     admin_id?: string;
+    verified_mail?: boolean;
 }
 
 export enum UserRole {
