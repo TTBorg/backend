@@ -1,17 +1,17 @@
 import { z } from 'zod';
 
 export const adminLoginSchema = z.object({
-    email: z.string(),
+    email: z.string().email(),
     password: z.string().min(8)
 });
 
 export const invitePm = z.object({
-    email: z.string(),
+    email: z.string().email(),
     admin_id: z.string()
 });
 
 export const adminRegSchema = z.object({
-    email: z.string(),
+    email: z.string().email(),
     password: z.string().min(8),
     fname: z.string(),
     lname: z.string(),
@@ -23,6 +23,14 @@ export const adminRegSchema = z.object({
     state: z.string(),
     team_size: z.number(),
 });
+
+export const pmRegSchema = z.object({
+    email: z.string().email(),
+    password: z.string().min(8),
+    fname: z.string(),
+    lname: z.string(),
+    admin_id: z.string()
+})
 
 export const adminVerifySchema = z.object({
     token: z.string()

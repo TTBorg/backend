@@ -6,9 +6,11 @@ export interface IUser {
     email?: string;
     alt_email?: string;
     phone?: string;
+    whatsapp_number?: string;
     address?: string;
     country?: string;
     state?: string;
+    city?: string;
     team_size?: number;
     password?: string;
     role?: UserRole;
@@ -18,9 +20,16 @@ export interface IUser {
     status?: boolean;
     admin_id?: string;
     verified_mail?: boolean;
+    company_email?: string;
+    specialization?: string;
 }
+
+//TODO: create missing types for the different user roles
 
 export enum UserRole {
     ADMIN = 'admin',
-    PROJECT_MANAGER = 'project_manager'
+    PROJECT_MANAGER = 'project_manager',
+    CONTRACTOR = 'contractor',
+    CONSULTANT = 'consultant',
+    PROJECT_OWNER = 'project_owner'
 }

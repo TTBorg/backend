@@ -6,12 +6,13 @@ import { blacklistToken } from '../middleware/authMiddleware';
 import { ProjectManager } from '../models/pmModel';
 import sendEmail from '../utils/sendEmail';
 import mongoose from 'mongoose';
-import { Request, Response } from 'express';
+import { Request, RequestHandler, Response } from 'express';
 import { UserRole } from '../types/user';
 import Token from '../models/tokenModel';
+import Project from '../models/projectModel';
 
 // Admin Signup
-export const registerAdmin = async (req: Request, res: Response) => {
+export const registerAdmin: RequestHandler = async (req: Request, res: Response): Promise<void> => {
   try {
     const {
       fname,
@@ -29,7 +30,7 @@ export const registerAdmin = async (req: Request, res: Response) => {
 
     // Check if email is already in use
     const existingAdmin = await Admin.findOne({ email });
-    if (existingAdmin) return res.status(400).json({ error: 'Email is already in use' });
+    if (existingAdmin) res.status(400).json({ error: 'Email is already in use' });
 
     // Hash the password before saving
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -67,7 +68,7 @@ export const registerAdmin = async (req: Request, res: Response) => {
       await sendEmail(email, 'Welcome to TTB', emailContent);
     } catch (emailError: any) {
       console.error('Error sending invitation email:', emailError);
-      return res.status(500).json({ error: 'Failed to send invitation email', token: (await token).token, details: emailError.message });
+      res.status(500).json({ error: 'Failed to send invitation email', token: (await token).token, details: emailError.message });
     }
 
     // Return success response with user details
@@ -82,93 +83,8 @@ export const registerAdmin = async (req: Request, res: Response) => {
 };
 
 
-// Admin Login
-// exports.loginAdmin = async (req, res) => {
-//   const { email, password } = req.body;
-
-//   try {
-//     // Simple validation for email and password
-//     if (!email || !password) {
-//       return res.status(400).json({ error: 'Please provide both email and password' });
-//     }
-
-//     // Find the admin by email
-//     const admin = await Admin.findOne({ email });
-//     if (!admin) return res.status(401).json({ error: 'Admin not found' });
-
-//     // Check if the provided password matches the stored hashed password
-//     const isPasswordValid = await bcrypt.compare(password, admin.password);
-//     if (!isPasswordValid) return res.status(401).json({ error: 'Invalid credentials' });
-
-//     // Generate a JWT token (using the JWT_SECRET from the .env file)
-//     const token = jwt.sign(
-//       { id: admin._id, role: admin.role }, 
-//       process.env.JWT_SECRET,              
-//       { expiresIn: '1h' }                 
-//     );
-
-//     // Return the token to the client
-//     res.status(200).json({
-//       message: 'Login successful',
-//       token, // The JWT token to be used in subsequent requests
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: 'Login failed' });
-//   }
-// };
-
-// exports.loginAdmin = async (req, res) => {
-//   const { email, password } = req.body;
-
-//   try {
-//     // Simple validation for email and password
-//     if (!email || !password) {
-//       return res.status(400).json({ error: 'Please provide both email and password' });
-//     }
-
-//     // Find the admin by email
-//     const admin = await Admin.findOne({ email });
-//     if (!admin) return res.status(401).json({ error: 'Admin not found' });
-
-//     // Check if the provided password matches the stored hashed password
-//     const isPasswordValid = await bcrypt.compare(password, admin.password);
-//     if (!isPasswordValid) return res.status(401).json({ error: 'Invalid credentials' });
-
-//     // Generate a JWT token (using the JWT_SECRET from the .env file)
-//     const token = jwt.sign(
-//       { id: admin._id, role: admin.role }, 
-//       process.env.JWT_SECRET,              
-//       { expiresIn: '1h' }                 
-//     );
-
-//     // Return the token and admin details to the client
-//     res.status(200).json({
-//       message: 'Login successful',
-//       token, // The JWT token to be used in subsequent requests
-//       user: {
-//         id: admin._id,
-//         first_name: admin.first_name,
-//         last_name: admin.last_name,
-//         company_name: admin.company_name,
-//         email: admin.email,
-//         alt_email: admin.alt_email,
-//         phone: admin.phone,
-//         address: admin.address,
-//         country: admin.ecountrymail,
-//         state: admin.state,
-//         team_size: admin.team_size,
-//         role: admin.role,
-//         // Add any other fields from the admin document you'd like to include
-//       },
-//     });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: 'Login failed' });
-//   }
-// };
-
-export const verifyEmail = async (req: Request, res: Response) => {
+//verify email
+export const verifyEmail: RequestHandler = async (req: Request, res: Response) => {
   try {
 
     const { token } = req.body;
@@ -176,22 +92,25 @@ export const verifyEmail = async (req: Request, res: Response) => {
 
     const tokenValid = await Token.findOne({ token }).exec();
     if (!tokenValid) {
-      return res.status(400).json({ error: 'Token is invalid' });
+      throw new Error('Invalid or expired token');
     }
 
     const user = await Admin.findById(tokenValid.userId);
     if (!user) {
-      return res.status(400).json({ error: 'User not found' });
+      res.status(400).json({ error: 'User not found' });
+    }
+    else {
+      user.verified_mail = true;
+      user.save();
+      await Token.deleteOne({ token });
+      res.status(200).json({
+        message: 'Verification successful',
+        token,
+        user: user,
+      });
     }
 
-    user.verified_mail = true;
-    user.save();
-    await Token.deleteOne({ token });
-    res.status(200).json({
-      message: 'Verification successful',
-      token,
-      user: user,
-    });
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Verification failed' });
@@ -200,14 +119,15 @@ export const verifyEmail = async (req: Request, res: Response) => {
 }
 
 
-export const loginAdmin = async (req: Request, res: Response) => {
+// Admin Login
+export const loginAdmin: RequestHandler = async (req: Request, res: Response) => {
   const { email, password }: { email: string, password: string } = req.body;
   console.log(email);
 
   try {
     // Validate required fields
     if (!email || !password) {
-      return res.status(400).json({ error: 'Please provide email and password' });
+      res.status(400).json({ error: 'Please provide email and password' });
     }
 
     // Define models to check against
@@ -230,19 +150,19 @@ export const loginAdmin = async (req: Request, res: Response) => {
     }
 
     if (!user) {
-      return res.status(401).json({ error: 'User not found' });
+      res.status(401).json({ error: 'User not found' });
     }
     // Check if the provided password matches the stored hashed password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      res.status(401).json({ error: 'Invalid credentials' });
     }
 
     // Generate a JWT token (using the JWT_SECRET from the .env file)
 
     const secret = process.env.JWT_SECRET || '';
     const token = jwt.sign(
-      { id: user._id, role: userRole },
+      { id: user._id, role: userRole, verified: user.verified_mail },
       secret,
       { expiresIn: '1h' }
     );
@@ -282,199 +202,8 @@ export const loginAdmin = async (req: Request, res: Response) => {
   }
 };
 
-
-
-
-
-// // Invite a PM
-// exports.invitePM = async (req, res) => {
-//   const { email } = req.body;
-
-//   try {
-//     if (!email) {
-//       return res.status(400).json({ error: 'Email is required' });
-//     }
-
-//     // Check if PM already exists
-//     const existingPM = await ProjectManager.findOne({ email });
-//     if (existingPM) {
-//       return res.status(400).json({ error: 'Project Manager already exists' });
-//     }
-
-//     // Generate a unique signup token
-//     const signupToken = crypto.randomBytes(32).toString('hex');
-
-//     // Send signup email
-//     const signupLink = `${process.env.FRONTEND_URL}/signup?token=${signupToken}`;
-//     await sendEmail(
-//       email,
-//       'Project Manager Invitation',
-//       `<p>You have been invited to join as a Project Manager. Click <a href="${signupLink}">here</a> to sign up.</p>`
-//     );
-
-//     res.status(200).json({ message: 'Invitation sent successfully' });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: 'Failed to invite Project Manager' });
-//   }
-// };
-
-
-// exports.invitePM = async (req, res) => {
-//   const { email } = req.body;
-
-//   try {
-//     // Step 1: Validate the email field exists
-//     if (!email) {
-//       return res.status(400).json({ error: 'Email is required' });
-//     }
-
-//     // Step 2: Validate the email format
-//     const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-//     if (!isValidEmail) {
-//       return res.status(400).json({ error: 'Invalid email address' });
-//     }
-
-//     // Step 3: Check if the Project Manager already exists
-//     try {
-//       const existingPM = await ProjectManager.findOne({ email });
-//       if (existingPM) {
-//         return res.status(400).json({ error: 'Project Manager already exists' });
-//       }
-//     } catch (dbError) {
-//       console.error('Error querying the database:', dbError);
-//       return res.status(500).json({ error: 'Database query failed while checking for existing Project Manager' });
-//     }
-
-//     // Step 4: Generate a unique signup token
-//     let signupToken;
-//     try {
-//       signupToken = crypto.randomBytes(32).toString('hex');
-//     } catch (tokenError) {
-//       console.error('Error generating signup token:', tokenError);
-//       return res.status(500).json({ error: 'Failed to generate signup token' });
-//     }
-
-//     // Step 5: Hash the token and store it with an expiration time
-//     const hashedToken = crypto.createHash('sha256').update(signupToken).digest('hex');
-//     const tokenExpiration = Date.now() + 24 * 60 * 60 * 1000; // Token valid for 24 hours
-
-//     try {
-//       await ProjectManager.create({
-//         email,
-//         signupToken: hashedToken,
-//         signupTokenExpires: tokenExpiration,
-//       });
-//     } catch (saveError) {
-//       console.error('Error saving Project Manager to the database:', saveError);
-//       return res.status(500).json({ error: 'Failed to save Project Manager to the database' });
-//     }
-
-//     // Step 6: Create the signup link
-//     const signupLink = `${process.env.FRONTEND_URL}/signup?token=${signupToken}`;
-
-//     // Step 7: Send the email
-//     try {
-//       const emailContent = `
-//         <p>You have been invited to join as a Project Manager.</p>
-//         <p>Click <a href="${signupLink}">here</a> to sign up.</p>
-//         <p>This link will expire in 24 hours.</p>
-//       `;
-//       await sendEmail(email, 'Project Manager Invitation', emailContent);
-//     } catch (emailError) {
-//       console.error('Error sending invitation email:', emailError);
-//       return res.status(500).json({ error: 'Failed to send invitation email' });
-//     }
-
-//     // Success Response
-//     res.status(200).json({
-//       message: 'Invitation sent successfully',
-//       signupLink, // For debugging, remove in production
-//     });
-//   } catch (error) {
-//     console.error('Unexpected error in invitePM:', error);
-//     res.status(500).json({ error: 'An unexpected error occurred' });
-//   }
-// };
-
-// exports.invitePM = async (req, res) => {
-//   const { email } = req.body;
-
-//   try {
-//     // Step 1: Validate the email field exists
-//     if (!email) {
-//       return res.status(400).json({ error: 'Email is required' });
-//     }
-
-//     // Step 2: Validate the email format
-//     const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-//     if (!isValidEmail) {
-//       return res.status(400).json({ error: 'Invalid email address' });
-//     }
-
-//     // Step 3: Check if the Project Manager already exists
-//     try {
-//       const existingPM = await ProjectManager.findOne({ email });
-//       // if (existingPM) {
-//       //   return res.status(400).json({ error: 'Project Manager already exists' });
-//       // }
-//     } catch (dbError) {
-//       console.error('Error querying the database:', dbError);
-//       return res.status(500).json({ error: 'Database query failed while checking for existing Project Manager' });
-//     }
-
-//     // Step 4: Generate a unique signup token
-//     let signupToken;
-//     try {
-//       signupToken = `pm_${crypto.randomBytes(32).toString('hex')}`;
-//     } catch (tokenError) {
-//       console.error('Error generating signup token:', tokenError);
-//       return res.status(500).json({ error: 'Failed to generate signup token' });
-//     }
-
-//     // Step 5: Hash the token and store it with an expiration time
-//     const hashedToken = crypto.createHash('sha256').update(signupToken.replace('pm_', '')).digest('hex');
-//     const tokenExpiration = Date.now() + 24 * 60 * 60 * 1000; // Token valid for 24 hours
-
-//     try {
-//       await ProjectManager.create({
-//         email,
-//         signupToken: hashedToken,
-//         signupTokenExpires: tokenExpiration,
-//       });
-//     } catch (saveError) {
-//       console.error('Error saving Project Manager to the database:', saveError);
-//       return res.status(500).json({ error: 'Failed to save Project Manager to the database' });
-//     }
-
-//     // Step 6: Create the signup link
-//     const signupLink = `${process.env.FRONTEND_URL}/signup?token=${signupToken}`;
-
-//     // Step 7: Send the email
-//     try {
-//       const emailContent = `
-//         <p>You have been invited to join as a Project Manager.</p>
-//         <p>Click <a href="${signupLink}">here</a> to sign up.</p>
-//         <p>This link will expire in 24 hours.</p>
-//       `;
-//       await sendEmail(email, 'Project Manager Invitation', emailContent);
-//     } catch (emailError) {
-//       console.error('Error sending invitation email:', emailError);
-//       return res.status(500).json({ error: 'Failed to send invitation email', details: emailError.message });
-//     }
-
-//     // Success Response
-//     res.status(200).json({
-//       message: 'Invitation sent successfully',
-//     });
-//   } catch (error) {
-//     console.error('Unexpected error in invitePM:', error);
-//     res.status(500).json({ error: 'An unexpected error occurred' });
-//   }
-// };
-
-
-export const invitePM = async (req: Request, res: Response) => {
+// Invite Project Manager
+export const invitePM: RequestHandler = async (req: Request, res: Response) => {
   const { email, admin_id } = req.body;
 
   try {
@@ -484,24 +213,24 @@ export const invitePM = async (req: Request, res: Response) => {
     // Step 2: Validate the email format
     const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     if (!isValidEmail) {
-      return res.status(400).json({ error: 'Invalid email address' });
+      throw new Error('Invalid email format');
     }
 
     // Step 3: Validate admin_id as an ObjectId
     if (!mongoose.isValidObjectId(admin_id)) {
-      return res.status(400).json({ error: 'Invalid admin ID' });
+      throw new Error('Invalid admin ID');
     }
 
     // Step 4: Check if the admin exists
     const admin = await Admin.findById(admin_id);
     if (!admin) {
-      return res.status(404).json({ error: 'Admin not found' });
+      throw new Error('Admin not found');
     }
 
     // Step 5: Create the signup link with the admin_id
     const signupLink = `${process.env.APP_URL}/pm-profile-setup?admin_id=${admin_id}`;
 
-    // Step 6: Send the invitation email
+    // Step 6: Send the invitation emailRequestHandler
     try {
       const emailContent = `
         <p>You have been invited to join as a Project Manager by ${admin.fname} ${admin.lname}.</p>
@@ -511,7 +240,7 @@ export const invitePM = async (req: Request, res: Response) => {
       await sendEmail(email, 'Invitation to Join as Project Manager', emailContent);
     } catch (emailError: any) {
       console.error('Error sending invitation email:', emailError);
-      return res.status(500).json({ error: 'Failed to send invitation email', signupLink, details: emailError.message });
+      throw new Error('Failed to send invitation email');
     }
 
     // Success Response
@@ -527,14 +256,14 @@ export const invitePM = async (req: Request, res: Response) => {
   }
 };
 
-
-export const getAllAdmins = async (req: Request, res: Response) => {
+// Get all Admins
+export const getAllAdmins: RequestHandler = async (req: Request, res: Response) => {
   try {
     // Retrieve all admins from the database
     const admins = await Admin.find();
 
     if (admins.length === 0) {
-      return res.status(404).json({ message: 'No admins found' });
+      throw new Error('No admins found');
     }
 
     // Return the list of admins
@@ -549,13 +278,141 @@ export const getAllAdmins = async (req: Request, res: Response) => {
 };
 
 
-
-export const logoutAdmin = (req: Request, res: Response) => {
+// Logout
+export const logoutAdmin: RequestHandler = (req: Request, res: Response) => {
   const token = req.header('Authorization')?.split(' ')[1];
   if (!token) {
-    return res.status(400).json({ message: 'Token is required for logout' });
+    res.status(400).json({ message: 'Token is required for logout' });
+  } else {
+    blacklistToken(token);
+    res.status(200).json({ message: 'Logout successful' });
   }
-  blacklistToken(token);
-  res.status(200).json({ message: 'Logout successful' });
+
 };
+
+// Create Project
+export const createProject = async (req: Request, res: Response) => {
+  const { title, created_by, pm_id } = req.body;
+
+  try {
+    // Validate `created_by` and `pm_id` as ObjectIds
+    if (!mongoose.isValidObjectId(created_by)) {
+      return res.status(400).json({ error: 'Invalid created_by ID' });
+    }
+    if (!mongoose.isValidObjectId(pm_id)) {
+      return res.status(400).json({ error: 'Invalid pm_id' });
+    }
+    console.log('got here 1');
+    // Verify the admin creating the project
+    const adminUser: any = await Admin.findById(created_by);
+    // console.log("adminUser:", adminUser);  // Debugging step
+    if (!adminUser || adminUser.role !== "admin") {
+      return res.status(403).json({ error: 'Only admins can create projects' });
+    }
+
+    console.log('got here 2');
+
+    // Verify the project manager
+    const projectManager: any = await ProjectManager.findById(pm_id);
+    //   console.log("projectManager:", projectManager);  // Debugging step
+    if (!projectManager) {
+      return res.status(400).json({ error: 'Invalid project manager ID' });
+    }
+    if (projectManager.role !== 'project_manager') {
+      return res.status(400).json({ error: 'Invalid project manager Role' });
+    }
+
+    console.log('got here 3');
+
+    // Create the project
+    const newProject = new Project({
+      title,
+      created_by,
+      pm_id,
+      status: 'active'
+    });
+    projectManager.assigned_projects.push(newProject._id);
+    await projectManager.save();
+
+    const savedProject = await newProject.save();
+    res.status(201).json({
+      message: 'Project created successfully',
+      project: savedProject,
+    });
+  } catch (error) {
+    console.error('Error creating project:', error);
+    res.status(500).json({ message: 'Failed to create project', error });
+  }
+};
+
+export const reassignProjectController = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { pm_id } = req.body;
+  try {
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ error: 'Invalid project ID' });
+    }
+    if (!mongoose.isValidObjectId(pm_id)) {
+      return res.status(400).json({ error: 'Invalid pm_id' });
+    }
+
+    const project = await Project.findById(id);
+    if (!project) return res.status(400).json({ error: 'Project not found' });
+
+    project.pm_id = pm_id;
+    await project.save();
+
+    res.status(200).json({
+      message: 'Project reassigned successfully',
+      project: project,
+    });
+
+  } catch (error) {
+    console.error('Error creating project:', error);
+    res.status(500).json({ error: 'Failed to reassign project' });
+  }
+
+}
+
+export const getAllProjectManagers = async (req: Request, res: Response) => {
+  try {
+    // Retrieve all project managers
+    const projectManagers = await ProjectManager.find().populate('assigned_projects').exec();
+
+    if (projectManagers.length === 0) {
+      return res.status(404).json({ message: 'No project managers found' });
+    }
+
+    // Return the list of project managers
+    res.status(200).json({
+      message: 'Project managers retrieved successfully',
+      projectManagers,
+    });
+  } catch (error) {
+    console.error('Error retrieving project managers:', error);
+    res.status(500).json({ error: 'Failed to retrieve project managers' });
+  }
+};
+
+export const getAllProjects = async (req: Request, res: Response) => {
+  try {
+    // Retrieve all project managers
+    const projects = await Project.find();
+
+    if (projects.length === 0) {
+      return res.status(404).json({ message: 'No project found' });
+    }
+
+    // Return the list of project managers
+    res.status(200).json({
+      message: 'Projects retrieved successfully',
+      projects,
+    });
+  } catch (error) {
+    console.error('Error retrieving projects:', error);
+    res.status(500).json({ error: 'Failed to retrieve projects' });
+  }
+};
+
 

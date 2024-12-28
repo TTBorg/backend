@@ -1,22 +1,19 @@
 import { Schema, model } from "mongoose";
-import { IUser } from "../types/user";
-// import { UserRole } from "../types/user.d";
+import { UserRole, type IUser } from "../types/user";
 
-enum UserRole {
-  ADMIN = 'admin',
-  PROJECT_MANAGER = 'project_manager',
-  CONTRACTOR = 'contractor',
-  CONSULTANT = 'consultant',
-  PROJECT_OWNER = 'project_owner'
-}
+
 
 // Define Admin schema
-const adminSchema = new Schema<IUser>({
+const contractorSchema = new Schema<IUser>({
   fname: {
     type: String,
     required: true
   },
   lname: {
+    type: String,
+    required: true
+  },
+  specialization: {
     type: String,
     required: true
   },
@@ -55,7 +52,7 @@ const adminSchema = new Schema<IUser>({
   role: {
     type: String,
     enum: UserRole,
-    default: UserRole.ADMIN
+    default: UserRole.CONTRACTOR
   },
   created_at: {
     type: Date,
@@ -71,5 +68,5 @@ const adminSchema = new Schema<IUser>({
   }
 });
 
-export const Admin = model('Admin', adminSchema);
+export const Contractor = model('Contractor', contractorSchema);
 

@@ -13,10 +13,8 @@ const pmSchema = new Schema<IUser>({
   role: { type: String, default: UserRole.PROJECT_MANAGER, enum: UserRole },
   assigned_projects: [{ type: Schema.Types.ObjectId, ref: 'Project' }],
   status: { type: String, enum: ['active', 'suspended'], default: 'active' },
-  admin_id: { type: String },
-  created_at: { type: Date, default: Date.now },
-  updated_at: { type: Date, default: Date.now },
-});
+  admin_id: { type: String },  
+}, {timestamps: {createdAt: 'created_at', updatedAt: 'updated_at' }});
 
 export const ProjectManager = model('ProjectManager', pmSchema);
 

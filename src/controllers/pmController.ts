@@ -4,48 +4,11 @@ import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import { Admin } from '../models/adminModel';
 import { Request, Response } from 'express';
-// http://localhost:3000/api/pm/project-managers/admin/673b0b7422966c929aa1d7ac
+import ProjectDetail from '../models/projectDetailsModel';
+import { CustomRequest } from '../middleware/authMiddleware';
+import sendEmail from '../utils/sendEmail';
 
-// PM Signup
-// exports.signupPM = async (req, res) => {
-//   const { fname, lname, email, password, admin_id } = req.body;  // Use fname and lname as in the model
 
-//   try {
-//     // Validate required fields
-//     if (!fname || !lname || !email || !admin_id || !password) {
-//       return res.status(400).json({ error: 'Please provide all required fields' });
-//     }
-
-//     // Check if PM already exists
-//     const existingPM = await ProjectManager.findOne({ email });
-//     if (existingPM) {
-//       return res.status(400).json({ error: 'Account already exists. Please log in.' });
-//     }
-
-//     // Hash password
-//     const hashedPassword = await bcrypt.hash(password, 10);
-
-//     // Create and save new PM
-//     const newPM = new ProjectManager({
-//       fname,
-//       lname,
-//       email,
-//       admin_id,
-//       password: hashedPassword,
-//     });
-//     await newPM.save();
-
-//     res.status(201).json({
-//       message: 'Project Manager Registered Successfully',
-//       user: newPM, // Return PM details
-//     });  
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: 'Signup failed' });
-//   }
-// };
-
-// PM Signup
 export const signupPM = async (req: Request, res: Response) => {
   const { fname, lname, email, password, admin_id } = req.body;
 
@@ -82,6 +45,7 @@ export const signupPM = async (req: Request, res: Response) => {
       email,
       admin_id,
       password: hashedPassword,
+      verified_mail: true
     });
     await newPM.save();
 
@@ -146,25 +110,7 @@ export const loginPM = async (req: Request, res: Response) => {
   }
 };
 
-export const getAllProjectManagers = async (req: Request, res: Response) => {
-  try {
-    // Retrieve all project managers
-    const projectManagers = await ProjectManager.find();
 
-    if (projectManagers.length === 0) {
-      return res.status(404).json({ message: 'No project managers found' });
-    }
-
-    // Return the list of project managers
-    res.status(200).json({
-      message: 'Project managers retrieved successfully',
-      projectManagers,
-    });
-  } catch (error) {
-    console.error('Error retrieving project managers:', error);
-    res.status(500).json({ error: 'Failed to retrieve project managers' });
-  }
-};
 
 export const getProjectManagersByAdmin = async (req: Request, res: Response) => {
   const { adminId } = req.params;
@@ -198,4 +144,109 @@ export const getProjectManagersByAdmin = async (req: Request, res: Response) => 
     res.status(500).json({ error: 'Failed to retrieve project managers' });
   }
 };
+
+export const createProjectDetails = async (req: Request, res: Response) => {
+  const { project_description, project_id, compliance_documents, project_country, project_state, project_city, project_client } = req.body;
+
+  try {
+
+
+    // Check if the created_by ID is a valid ObjectId
+    if (!mongoose.isValidObjectId(project_id)) {
+      return res.status(400).json({ error: 'Project does not exist' });
+    }
+
+    const projectDetail = new ProjectDetail({
+      project_id,
+      project_description,
+      compliance_documents,
+      project_country,
+      project_state,
+      project_city,
+      project_client,
+    });
+  } catch (error) {
+    console.error('Error creating project details:', error);
+    res.status(500).json({ error: 'Failed to create project details' });
+  }
+
+
+  // Check if the PM exists
+}
+
+export const sendInvites = async (req: Request, res: Response) => {
+
+  // Send invites to contractors, owners, and consultants
+  try {
+    const { contractors, consultants, owners } = req.body;
+
+    const customReq = req as CustomRequest;
+    const pm = await ProjectManager.findById(customReq.token.pmId);
+    if (!pm) {
+      throw new Error('Project Manager not found');
+    }
+    const signupLink = (role: string) => `${process.env.APP_URL}/pm-invite-team?pm_id=${customReq.token.pmId}&role=${role}`;
+
+    contractors.length > 0 && contractors.forEach(async (contractor: any) => {
+      try {
+        const emailContent = `
+          <p>You have been invited to join as a contractor with role ${contractor.role} by ${pm.fname} ${pm.lname}.</p>
+          <p>Click <a href="${signupLink(contractor.role)}">here</a> to sign up.</p>
+          <p>If you did not request this invitation, please ignore this email.</p>
+        `;
+        await sendEmail(contractor.email, 'Invitation to Join as Contractor', emailContent);
+      } catch (emailError: any) {
+        console.error('Error sending invitation email:', emailError);
+        throw new Error('Failed to send invitation email');
+      }
+    });
+
+    consultants.length > 0 && consultants.forEach(async (consultant: any) => {
+      try {
+        const emailContent = `
+          <p>You have been invited to join as a consultant with role ${consultant.role} by ${pm.fname} ${pm.lname}.</p>
+          <p>Click <a href="${signupLink(consultant.role)}">here</a> to sign up.</p>
+          <p>If you did not request this invitation, please ignore this email.</p>
+        `;
+        await sendEmail(consultant.email, 'Invitation to Join as Consultant', emailContent);
+      } catch (emailError: any) {
+        console.error('Error sending invitation email:', emailError);
+        throw new Error('Failed to send invitation email');
+      }
+    });
+
+    owners.length > 0 && owners.forEach(async (owner: any) => {
+      try {
+        const emailContent = `
+          <p>You have been invited to join as an owner by ${pm.fname} ${pm.lname}.</p>
+          <p>Click <a href="${signupLink('owner')}">here</a> to sign up.</p>
+          <p>If you did not request this invitation, please ignore this email.</p>
+        `;
+        await sendEmail(owner.email, 'Invitation to Join as Project Owner', emailContent);
+      } catch (emailError: any) {
+        console.error('Error sending invitation email:', emailError);
+        throw new Error('Failed to send invitation email');
+      }
+    })
+
+
+
+
+    // Step 6: Send the invitation emailRequestHandler
+
+    // Use nodemailer or any other email service to send invites
+    // You can use the email address from the request body to send the invites
+    // You can also use the project_id to get the project details and include them in the email
+    // Return a success message if the invites are sent successfully
+    // Return an error message if the invites fail to send
+    res.status(200).json({ message: 'Invites sent successfully' });
+
+  } catch (error) {
+    console.error('Error sending invites:', error);
+    res.status(500).json({ error: 'Failed to send invites' });
+
+  }
+
+};
+
 

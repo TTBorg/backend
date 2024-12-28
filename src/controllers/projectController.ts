@@ -54,35 +54,35 @@ export const createProject = async (req: Request, res: Response) => {
   }
 };
 
-export const updateProject = async (req: Request, res: Response) => {
-  const { projectId } = req.params;
-  const { title, client_name, compliance_info, status } = req.body;
+// export const updateProject = async (req: Request, res: Response) => {
+//   const { projectId } = req.params;
+//   const { title, client_name, compliance_info, status } = req.body;
 
-  try {
-    // Check if the project exists
-    const project = await Project.findById(projectId);
-    if (!project) {
-      return res.status(404).json({ error: 'Project not found' });
-    }
+//   try {
+//     // Check if the project exists
+//     const project = await Project.findById(projectId);
+//     if (!project) {
+//       return res.status(404).json({ error: 'Project not found' });
+//     }
 
-    // Update project fields
-    project.title = title || project.title;
-    project.client_name = client_name || project.client_name;
-    project.compliance_info = compliance_info || project.compliance_info;
-    project.status = status || project.status;
-    project.updated_at = Date.now().toString();
+//     // Update project fields
+//     project.title = title || project.title;
+//     project.client_name = client_name || project.client_name;
+//     project.compliance_info = compliance_info || project.compliance_info;
+//     project.status = status || project.status;
+//     project.updated_at = Date.now().toString();
 
-    // Save the updated project
-    const updatedProject = await project.save();
-    res.status(200).json({
-      message: 'Project updated successfully',
-      project: updatedProject,
-    });
-  } catch (error) {
-    console.error('Error updating project:', error);
-    res.status(500).json({ error: 'Failed to update project' });
-  }
-};
+//     // Save the updated project
+//     const updatedProject = await project.save();
+//     res.status(200).json({
+//       message: 'Project updated successfully',
+//       project: updatedProject,
+//     });
+//   } catch (error) {
+//     console.error('Error updating project:', error);
+//     res.status(500).json({ error: 'Failed to update project' });
+//   }
+// };
 
 export const getProjectsByAdminId = async (req: Request, res: Response) => {
   const { admin_id } = req.params; // Assuming the admin ID is passed as a URL parameter
