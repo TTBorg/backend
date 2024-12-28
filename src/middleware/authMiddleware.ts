@@ -7,42 +7,41 @@ import { Admin } from '../models/adminModel';
 const tokenBlacklist = new Set();
 
 export interface CustomRequest extends Request {
-  token: string | JwtPayload;
+  token: { id: string, email?: string, role: string, pmId: string } | JwtPayload;
 }
 
 // Middleware to check for a valid token and blacklist
-export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.split(' ')[0] === 'Bearer'
-    ) {
-      const token = req.headers.authorization?.split(' ')[1];
-      console.log(token);
-      // if (!token) return res.status(401).json({ error: 'Access denied, no token provided' });
 
-      // Check if token is blacklisted
+export function authMiddleware(role: string) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.headers.authorization) {
+        throw new JsonWebTokenError('Token not found');
+      }
+      const token = (req.headers.authorization as string).split(' ')[1];
       if (tokenBlacklist.has(token)) {
-        throw res.status(403).json({ error: 'Token has been invalidated. Please log in again.' });
+        throw new JsonWebTokenError('Token has been blacklisted');
       }
-      const secret: Secret = process.env.JWT_SECRET || '';
+      else {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET as Secret) as JwtPayload;
+        if (decoded.role !== role) {
+          throw new JsonWebTokenError('You are not authorized to access this route');
+        } else if (decoded.verified === false) {
+          throw new JsonWebTokenError('You are not verified');
+        }
+        else {
+          (req as CustomRequest).token = decoded;
+          next();
+        }
 
-      const decoded = <any>jwt.verify(token, secret);
-      const user = await Admin.findById(decoded.id);
-      if (!user?.verified_mail) {
-        throw res.status(StatusCodes.UNAUTHORIZED).json({ error: 'User is not verified' });
       }
-      (req as CustomRequest).token = decoded;
-      next();
     }
-    else {
-      res.status(401).json({ error: 'Token has been invalidated. Please log in again.' });
+    catch (error: any) {
+      console.log(error)
+      res.status(StatusCodes.UNAUTHORIZED).json({ error: error.message });
     }
-  } catch (error: any) {
-    console.log(error)
-    return res.status(StatusCodes.UNAUTHORIZED).json({ error: error.message });  
   }
-};
+}
 
 // Function to add a token to the blacklist (for use in the logout route)
 const blacklistToken = (token: string) => {

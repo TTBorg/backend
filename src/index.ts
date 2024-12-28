@@ -1,15 +1,41 @@
 import express from 'express';
-import mongoose from 'mongoose';
+import mongoose, { version } from 'mongoose';
 import * as dotenv from 'dotenv';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import adminRoutes from './routes/adminRoutes';
 import pmRoutes from './routes/pmRoutes';
 import projectRoutes from './routes/projectRoutes';
+import swaggerUi from 'swagger-ui-express';
+import swaggerJsdoc from 'swagger-jsdoc'
 
 dotenv.config();
 
 const app = express();
+
+const swaggerOptions = {
+    swaggerDefinition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'TTB API',
+            version: '1.0.0',
+            description: 'TTB API Documentation',
+            contact: {
+                name: 'TTB backend',
+                email: 'darmhoo@hotmail.com'
+            }
+        },
+        servers: [
+            {
+                url: 'http://localhost:3000',
+            },
+        ],
+    },
+    apis: ['src/routes/*.ts']
+};
+
+const swaggerDocs = swaggerJsdoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 app.use(cors({
     origin: '*', // Allow any origin
@@ -32,7 +58,7 @@ app.use(cors({
 
 
 app.use(bodyParser.json()); // For parsing application/json
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({ extended: true }));
 
 
 // Connect to MongoDB

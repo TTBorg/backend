@@ -1,0 +1,100 @@
+openapi: '3.0.3'
+info:
+  title: API Title
+  version: '1.0'
+servers:
+  - url: http://localhost:3000
+paths:  
+ /api/admin/project/create:
+  post:
+    summary: Create Project
+    description: Create Project
+    requestBody:
+       required: true
+       content:
+         application/json:
+           schema:
+             type: object
+             required:
+               - title
+               - created_by
+               - pm_id 
+             properties:
+               title:
+                 type: string
+                 description: Title of the project
+               created_by:
+                type: string
+                description: Id of Admin
+               pm_id:
+                type: string
+                description: Id of PM
+    responses:
+       201:
+         description: Ítem creado exitosamente.
+       400:
+         description: La solicitud es incorrecta o incompleta.
+       500:
+         description: Error interno del servidor. 
+         
+         
+ /api/admin/verify-email:
+   post:
+     summary: Admin
+     description: Admin Verify Email
+     requestBody:
+       required: true
+       content:
+         application/json:
+           schema:
+             type: object
+             required:
+               - token
+             properties:
+               token:
+                 type: string
+                 description: token
+     responses:
+       201:
+         description: Ítem creado exitosamente.
+       400:
+         description: La solicitud es incorrecta o incompleta.
+       500:
+         description: Error interno del servidor.
+
+
+ /api/admin/admins:
+   get:
+     summary: Admin 
+     description: Get all Admins 
+     responses:
+       201:
+         description: Ítem creado exitosamente.
+       400:
+         description: La solicitud es incorrecta o incompleta.
+       500:
+         description: Error interno del servidor.
+
+ /api/admin/invite-pm:
+   post:
+    summary: Admin
+    description: Admin Invite PM
+    requestBody:
+       required: true
+       content:
+         application/json:
+           schema:
+             type: object
+             required:
+               - email
+             properties:
+               email:
+                 type: string
+                 description: email of pm to invite
+    responses:
+       201:
+         description: Ítem creado exitosamente.
+       400:
+         description: La solicitud es incorrecta o incompleta.
+       500:
+         description: Error interno del servidor.

@@ -14,14 +14,6 @@ const ProjectSchema = new Schema<IProject>({
     type: String,
     required: true,
   },
-  client_name: {
-    type: String,
-    required: true,
-  },
-  compliance_info: {
-    type: String,
-    required: false,
-  },
   created_by: {
     type: Schema.Types.ObjectId,
     ref: 'Admin', // Reference Admin model
@@ -29,7 +21,7 @@ const ProjectSchema = new Schema<IProject>({
   },
   pm_id: {
     type: Schema.Types.ObjectId,
-    ref: 'Admin', // Reference Admin model for PMs
+    ref: 'ProjectManager', // Reference PM model for PMs
     required: true,
   },
   status: {
@@ -37,14 +29,6 @@ const ProjectSchema = new Schema<IProject>({
     enum: ProjectStatus,
     default: ProjectStatus.ACTIVE,
   },
-  created_at: {
-    type: String,
-    default: Date.now().toString,
-  },
-  updated_at: {
-    type: String,
-    default: Date.now().toString,
-  },
-});
+}, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
 export default model('Project', ProjectSchema);
