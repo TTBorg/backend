@@ -8,7 +8,7 @@
     "start": "node index.ts",
     "dev": "nodemon src/index.ts",
     "build": "tsc --output public",
-    "serve": "node built/index.js"
+    "serve": "node public/index.js"
   },
   "keywords": [],
   "author": "",
