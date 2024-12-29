@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.ts",
     "dev": "nodemon src/index.ts",
-    "build": "tsc",
+    "build": "tsc --output public",
     "serve": "node built/index.js"
   },
   "keywords": [],
