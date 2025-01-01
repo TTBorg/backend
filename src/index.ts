@@ -37,6 +37,13 @@ const swaggerOptions = {
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
+import { Request, Response } from 'express';
+
+app.get('/api-docs.json', (req: Request, res: Response) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(swaggerDocs);
+});
+
 app.use(cors({
     origin: '*', // Allow any origin
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
